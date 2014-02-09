@@ -5,6 +5,8 @@
  * Device type orients the slider to horizontal versus vertical and
  * adds increment up and down buttons. Hardcoded to increment by 10.
  *
+ * I also added the ability to use photo/picture as background.
+ *
  * To use you must have IDE access on your acount. Add a new device
  * type and add the custom commands:
  * 		levelUp
@@ -41,7 +43,7 @@ metadata {
 	}
 
 	tiles {
-		standardTile("switch", "device.switch", width: 2, height: 2, canChangeIcon: true) {
+		standardTile("switch", "device.switch", width: 2, height: 2, canChangeIcon: true, canChangeBackground: true) {
 			state "on", label:'${name}', action:"switch.off", icon:"st.switches.switch.on", backgroundColor:"#79b821", nextState:"turningOff"
 			state "off", label:'${name}', action:"switch.on", icon:"st.switches.switch.off", backgroundColor:"#ffffff", nextState:"turningOn"
 			state "turningOn", label:'${name}', icon:"st.switches.switch.on", backgroundColor:"#79b821"
