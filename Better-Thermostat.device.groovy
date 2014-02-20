@@ -11,8 +11,6 @@
  *		heatLevelDown
  * 		coolLevelUp
  *		coolLevelDown
- *		switchMode
- *		switchFanMode
  * Replace the starter code with this code and save the file. Go into
  * "My devices" and select the thermostat you want to change. Select "Edit"
  * and then change the "Type" to use this device type.
@@ -78,25 +76,19 @@ metadata {
 			)
 		}
 		standardTile("mode", "device.thermostatMode", inactiveLabel: false, decoration: "flat") {
-			state "off", label:'${name}', action:"switchMode"
-			state "heat", label:'${name}', action:"switchMode"
-			state "emergencyHeat", label:'${name}', action:"switchMode"
-			state "cool", label:'${name}', action:"switchMode"
-			state "auto", label:'${name}', action:"switchMode"
+			state "off", label:'', action:"switchMode", icon:"st.thermostat.heating-cooling-off"
+			state "heat", label:'', action:"switchMode", icon:"st.thermostat.heat"
+			state "emergencyHeat", label:'', action:"switchMode", icon:"st.thermostat.emergency-heat"
+			state "cool", label:'', action:"switchMode", icon:"st.thermostat.cool"
+			state "auto", label:'', action:"switchMode", icon:"st.thermostat.auto"
 		}
 		standardTile("fanMode", "device.thermostatFanMode", inactiveLabel: false, decoration: "flat") {
-			state "fanAuto", label:'${name}', action:"switchFanMode"
-			state "fanOn", label:'${name}', action:"switchFanMode"
-			state "fanCirculate", label:'${name}', action:"switchFanMode"
-		}
-		controlTile("heatSliderControl", "device.heatingSetpoint", "slider", height: 1, width: 2, inactiveLabel: false) {
-			state "setHeatingSetpoint", action:"thermostat.setHeatingSetpoint", backgroundColor:"#d04e00"
+			state "fanAuto", label:'', action:"switchFanMode", icon:"st.thermostat.fan-auto"
+			state "fanOn", label:'', action:"switchFanMode", icon:"st.thermostat.fan-on"
+			state "fanCirculate", label:'C', action:"switchFanMode", icon:"st.thermostat.fan-on"
 		}
 		valueTile("heatingSetpoint", "device.heatingSetpoint", inactiveLabel: false, decoration: "flat") {
 			state "heat", label:'${currentValue}° heat', unit:"F", backgroundColor:"#ffffff"
-		}
-		controlTile("coolSliderControl", "device.coolingSetpoint", "slider", height: 1, width: 2, inactiveLabel: false) {
-			state "setCoolingSetpoint", action:"thermostat.setCoolingSetpoint", backgroundColor: "#1e9cbb"
 		}
 		valueTile("coolingSetpoint", "device.coolingSetpoint", inactiveLabel: false, decoration: "flat") {
 			state "cool", label:'${currentValue}° cool', unit:"F", backgroundColor:"#ffffff"
@@ -107,19 +99,17 @@ metadata {
 		standardTile("configure", "device.configure", inactiveLabel: false, decoration: "flat") {
 			state "configure", label:'', action:"configuration.configure", icon:"st.secondary.configure"
 		}
-        
-        
         standardTile("heatLevelUp", "device.heatingSetpoint", canChangeIcon: false, inactiveLabel: false, decoration: "flat") {
-                        state "heatLevelUp", action:"heatLevelUp", icon:"st.alarm.temperature.overheat"
+                        state "heatLevelUp", label:'', action:"heatLevelUp", icon:"st.thermostat.thermostat-up"
         }
         standardTile("heatLevelDown", "device.heatingSetpoint", canChangeIcon: false, inactiveLabel: false, decoration: "flat") {
-                        state "heatLevelDown", action:"heatLevelDown", icon:"st.alarm.temperature.freeze"
+                        state "heatLevelDown", label:'', action:"heatLevelDown", icon:"st.thermostat.thermostat-down"
         }
         standardTile("coolLevelUp", "device.heatingSetpoint", canChangeIcon: false, inactiveLabel: false, decoration: "flat") {
-                        state "coolLevelUp", action:"coolLevelUp", icon:"st.alarm.temperature.overheat"
+                        state "coolLevelUp", label:'', action:"coolLevelUp", icon:"st.thermostat.thermostat-up"
         }
         standardTile("coolLevelDown", "device.heatingSetpoint", canChangeIcon: false, inactiveLabel: false, decoration: "flat") {
-                        state "coolLevelDown", action:"coolLevelDown", icon:"st.alarm.temperature.freeze"
+                        state "coolLevelDown", label:'', action:"coolLevelDown", icon:"st.thermostat.thermostat-down"
         }
         
 		main "temperature"
@@ -407,6 +397,7 @@ def switchMode() {
 			nextMode = next(nextMode)
 		}
 	}
+    log.debug "Switching to mode: ${nextMode}"
 	switchToMode(nextMode)
 }
 
