@@ -85,7 +85,7 @@ metadata {
 		standardTile("fanMode", "device.thermostatFanMode", inactiveLabel: false, decoration: "flat") {
 			state "fanAuto", label:'', action:"switchFanMode", icon:"st.thermostat.fan-auto"
 			state "fanOn", label:'', action:"switchFanMode", icon:"st.thermostat.fan-on"
-			state "fanCirculate", label:'C', action:"switchFanMode", icon:"st.thermostat.fan-on"
+			state "fanCirculate", label:'  ', action:"switchFanMode", icon:"st.thermostat.fan-circulate"
 		}
 		valueTile("heatingSetpoint", "device.heatingSetpoint", inactiveLabel: false, decoration: "flat") {
 			state "heat", label:'${currentValue}° heat', unit:"F", backgroundColor:"#ffffff"
@@ -97,19 +97,19 @@ metadata {
 			state "default", action:"polling.poll", icon:"st.secondary.refresh"
 		}
 		standardTile("configure", "device.configure", inactiveLabel: false, decoration: "flat") {
-			state "configure", label:'', action:"configuration.configure", icon:"st.secondary.configure"
+			state "configure", label:'  ', action:"configuration.configure", icon:"st.secondary.configure"
 		}
         standardTile("heatLevelUp", "device.heatingSetpoint", canChangeIcon: false, inactiveLabel: false, decoration: "flat") {
-                        state "heatLevelUp", label:'', action:"heatLevelUp", icon:"st.thermostat.thermostat-up"
+                        state "heatLevelUp", label:'  ', action:"heatLevelUp", icon:"st.thermostat.thermostat-up"
         }
         standardTile("heatLevelDown", "device.heatingSetpoint", canChangeIcon: false, inactiveLabel: false, decoration: "flat") {
-                        state "heatLevelDown", label:'', action:"heatLevelDown", icon:"st.thermostat.thermostat-down"
+                        state "heatLevelDown", label:'  ', action:"heatLevelDown", icon:"st.thermostat.thermostat-down"
         }
         standardTile("coolLevelUp", "device.heatingSetpoint", canChangeIcon: false, inactiveLabel: false, decoration: "flat") {
-                        state "coolLevelUp", label:'', action:"coolLevelUp", icon:"st.thermostat.thermostat-up"
+                        state "coolLevelUp", label:'  ', action:"coolLevelUp", icon:"st.thermostat.thermostat-up"
         }
         standardTile("coolLevelDown", "device.heatingSetpoint", canChangeIcon: false, inactiveLabel: false, decoration: "flat") {
-                        state "coolLevelDown", label:'', action:"coolLevelDown", icon:"st.thermostat.thermostat-down"
+                        state "coolLevelDown", label:'  ', action:"coolLevelDown", icon:"st.thermostat.thermostat-down"
         }
         
 		main "temperature"
