@@ -11,6 +11,14 @@
  *		heatLevelDown
  * 		coolLevelUp
  *		coolLevelDown
+ *
+ * Then check these Capabilities check boxes:
+ *		Configuration
+ *		Polling
+ *		Refresh
+ *		Temperature Measurement
+ *		Thermostat
+ *
  * Replace the starter code with this code and save the file. Go into
  * "My devices" and select the thermostat you want to change. Select "Edit"
  * and then change the "Type" to use this device type.
