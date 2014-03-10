@@ -11,6 +11,8 @@
  *		heatLevelDown
  * 		coolLevelUp
  *		coolLevelDown
+ *		switchMode
+ *		switchFanMode
  *
  * Then check these Capabilities check boxes:
  *		Configuration
