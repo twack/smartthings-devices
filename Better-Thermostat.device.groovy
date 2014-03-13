@@ -5,8 +5,16 @@
  * Device type removes the sliders and replaces them with incremental
  * up and down buttons on each side of the heating and cooling setpoints.
  *
- * To use you must have IDE access on your acount. Add a new device
- * type and add the custom commands:
+ * To use you must have IDE access on your acount. Add a new device, then
+ *
+ * check these Capabilities check boxes:
+ *		Configuration
+ *		Polling
+ *		Refresh
+ *		Temperature Measurement
+ *		Thermostat
+ *
+ * type and add these custom commands:
  * 		heatLevelUp
  *		heatLevelDown
  * 		coolLevelUp
@@ -14,12 +22,7 @@
  *		switchMode
  *		switchFanMode
  *
- * Then check these Capabilities check boxes:
- *		Configuration
- *		Polling
- *		Refresh
- *		Temperature Measurement
- *		Thermostat
+
  *
  * Replace the starter code with this code and save the file. Go into
  * "My devices" and select the thermostat you want to change. Select "Edit"
