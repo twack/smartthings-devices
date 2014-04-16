@@ -5,25 +5,14 @@
  * Device type removes the sliders and replaces them with incremental
  * up and down buttons on each side of the heating and cooling setpoints.
  *
- * To use you must have IDE access on your acount. Add a new device, then
- *
- * check these Capabilities check boxes:
- *		Configuration
- *		Polling
- *		Refresh
- *		Temperature Measurement
- *		Thermostat
- *
- * type and add these custom commands:
+ * To use you must have IDE access on your acount. Add a new device
+ * type and add the custom commands:
  * 		heatLevelUp
  *		heatLevelDown
  * 		coolLevelUp
  *		coolLevelDown
  *		switchMode
  *		switchFanMode
- *
-
- *
  * Replace the starter code with this code and save the file. Go into
  * "My devices" and select the thermostat you want to change. Select "Edit"
  * and then change the "Type" to use this device type.
@@ -35,6 +24,22 @@
  *
 */
 metadata {
+	// Automatically generated. Make future change here.
+	definition (name: "Better Thermostat", author: "todd@wackford.net") {
+		capability "Temperature Measurement"
+		capability "Refresh"
+		capability "Thermostat"
+		capability "Configuration"
+		capability "Polling"
+
+		command "heatLevelUp"
+		command "heatLevelDown"
+		command "coolLevelUp"
+		command "coolLevelDown"
+		command "switchMode"
+		command "switchFanMode"
+	}
+
 	// simulator metadata
 	simulator {
 		status "off"			: "command: 4003, payload: 00"
@@ -76,7 +81,7 @@ metadata {
 
 	tiles {
 		valueTile("temperature", "device.temperature", width: 2, height: 2) {
-			state("temperature", label:'${currentValue}°', unit:"F",
+			state("temperature", label:'${currentValue}°', unit:'F',
 				backgroundColors:[
 					[value: 31, color: "#153591"],
 					[value: 44, color: "#1e9cbb"],
