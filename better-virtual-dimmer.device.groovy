@@ -4,43 +4,51 @@ Author:  twack@wackware.net
 Version: 0.1
 Date:    2013-11-16
 Purpose: To implement horizontal slider and up/down toggle in virtual dimmer
-         device. This is great device to use with "Dim With Me" app. 
+         device. This is great device to use with "Dim With Me" app. This
+         functionality can also be found in "BetterDimmer.app.groovy".
 
 Use License: Non-Profit Open Software License version 3.0 (NPOSL-3.0)
              http://opensource.org/licenses/NPOSL-3.0
 
-******************************************************************************
-                                Change Log
-
-Version:  0.1
-Date:     20131116
-Change1:  Initial Release
-
-******************************************************************************
-
-Device Type:	Switch, Switch Level
-
-Custom
-Commands:		levelUp
-				levelDown
-                getLevel
-                dimmerOn
-                dimmerOff
-
-Custom
-Attributes:		None
-
-To-Do's:		Add momentary color changes to up down toggles to give user
-                better feedback. Also want to allow user to set step size for
-                uip/down toggles.
+ ******************************************************************************
+ *                                Changes
+ ******************************************************************************
+ *
+ *  Change 1:	2013-11-16 (wackford)
+ *				Initial Build
+ *
+ *  Change 2:	2014-10-10 (twackford)
+ *				Rebuilt to add metadata
+ *
+ ******************************************************************************
                 
-Other Info:		Special thanks to Danny Kleinman at ST for helping me get the
+  Other Info:	Special thanks to Danny Kleinman at ST for helping me get the
 				state stuff figured out. The Android state filtering had me 
                 stumped.
 
-******************************************************************************/
+ *****************************************************************************/
+ 
+preferences {
+    input("stepsize", "text", title: "Step Size", description: "Step Size (default 10)")
+}
 
 metadata {
+	// Automatically generated. Make future change here.
+	definition (name: "Better Virtual Dimmer", author: "todd@wackford.net") {
+		capability "Switch"
+        capability "Switch Level"
+		capability "Refresh"
+		capability "Polling"
+
+		attribute "stepsize", "string"
+
+		command "levelUp"
+		command "levelDown"
+		command "getLevel"
+		command "dimmerOn"
+		command "dimmerOff"
+	}
+
     tiles {
         // had to overide standard off and on actions to work on Android.
         // screwed up the currentValue variable in the value tile
@@ -49,8 +57,8 @@ metadata {
             state "off", label:'${name}', action:"dimmerOn", icon:"st.switches.switch.off", backgroundColor:"#ffffff"
 
         }
-        controlTile("levelSliderControl", "device.level", "slider", height: 1, width: 2, inactiveLabel: false, backgroundColor:"#ffe71e") {
-            state "level", action:"switch level.setLevel"
+        controlTile("levelSliderControl", "device.level", "slider", height: 1, width: 2, inactiveLabel: false) {
+            state "level", action:"switch level.setLevel", unit:"", backgroundColor:"#ffe71e"
         }
         
         valueTile("lValue", "device.level", inactiveLabel: true, height:1, width:1, decoration: "flat") {
@@ -65,7 +73,7 @@ metadata {
         }
 
         main(["switch"])
-        details(["switch","lUp","lDown","levelSliderControl","lValue",])
+        details(["switch","lUp","lDown","levelSliderControl","lValue" ,"Preferences"])
     }
 }
 
@@ -84,6 +92,7 @@ def dimmerOff() { //made our own, since event was filtered by default on Android
 
 def setLevel(val){
     log.info "setLevel $val"
+    log.info "Step Size: ${settings.stepsize}"
     
     // make sure we don't drive switches past allowed values (command will hang device waiting for it to
     // execute. Never commes back)
