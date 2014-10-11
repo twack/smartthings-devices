@@ -20,6 +20,11 @@ Use License: Non-Profit Open Software License version 3.0 (NPOSL-3.0)
  *  Change 2:	2014-10-10 (twackford)
  *				Rebuilt to add metadata
  *
+ *  Change 3:	2014-10-11 (twackford)
+ *				fixed step size implementation now that android supports
+ *
+ * 
+ *
  ******************************************************************************
                 
   Other Info:	Special thanks to Danny Kleinman at ST for helping me get the
@@ -29,7 +34,8 @@ Use License: Non-Profit Open Software License version 3.0 (NPOSL-3.0)
  *****************************************************************************/
  
 preferences {
-    input("stepsize", "text", title: "Step Size", description: "Step Size (default 10)")
+    input("stepsize", "number", title: "Step Size", description: "Step Size (default 10)", 
+    defaultValue: 10)
 }
 
 metadata {
@@ -118,13 +124,15 @@ def setLevel(val){
 }
 
 def levelUp(){
-    int nextLevel = device.currentValue("level") + 10
+	def thisStep = settings.stepsize as float
+    int nextLevel = device.currentValue("level") + thisStep
     setLevel(nextLevel)
     log.info "level up $nextLevel"
 }
 
 def levelDown(){
-    int nextLevel = device.currentValue("level") - 10
+    def thisStep = settings.stepsize as float
+    int nextLevel = device.currentValue("level") - thisStep
     setLevel(nextLevel)
     log.info "level down $nextLevel"
 }
