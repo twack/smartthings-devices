@@ -19,7 +19,7 @@ Use License: Non-Profit Open Software License version 3.0 (NPOSL-3.0)
  *
  *  Change 2:	2014-10-10 (twackford)
  *				Rebuilt to add metadata
- * 
+ *
  *  Change 3:	2014-10-12 (twackford)
  *				Moved preferences section into metadata section
  *
@@ -134,8 +134,12 @@ def setLevel(val){
 }
 
 def levelUp(){
-	if ( !state.stepsize )
+	if ( !state.stepsize ) {
     	initialize()
+        log.info "initialized on first up"
+    } else {
+    	state.stepsize = settings.stepsize
+    }
     
     def thisStep = state.stepsize as float
     int nextLevel = device.currentValue("level") + thisStep
@@ -144,9 +148,13 @@ def levelUp(){
 }
 
 def levelDown(){
-	if ( !state.stepsize )
+	if ( !state.stepsize ) {
     	initialize()
-        
+        log.info "initialized on first down"
+    } else {
+    	state.stepsize = settings.stepsize
+    }
+    
     def thisStep = state.stepsize as float
     int nextLevel = device.currentValue("level") - thisStep
     setLevel(nextLevel)
