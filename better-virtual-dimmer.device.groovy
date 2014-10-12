@@ -134,7 +134,7 @@ def setLevel(val){
 }
 
 def levelUp(){
-	if ( state.stepsize )
+	if ( !state.stepsize )
     	initialize()
     
     def thisStep = state.stepsize as float
@@ -144,7 +144,7 @@ def levelUp(){
 }
 
 def levelDown(){
-	if ( state.stepsize )
+	if ( !state.stepsize )
     	initialize()
         
     def thisStep = state.stepsize as float
