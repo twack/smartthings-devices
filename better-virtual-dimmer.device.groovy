@@ -19,11 +19,9 @@ Use License: Non-Profit Open Software License version 3.0 (NPOSL-3.0)
  *
  *  Change 2:	2014-10-10 (twackford)
  *				Rebuilt to add metadata
- *
- *  Change 3:	2014-10-11 (twackford)
- *				fixed step size implementation now that android supports
- *
  * 
+ *  Change 3:	2014-10-12 (twackford)
+ *				Moved preferences section into metadata section
  *
  ******************************************************************************
                 
@@ -32,11 +30,6 @@ Use License: Non-Profit Open Software License version 3.0 (NPOSL-3.0)
                 stumped.
 
  *****************************************************************************/
- 
-preferences {
-    input("stepsize", "number", title: "Step Size", description: "Step Size (default 10)", 
-    defaultValue: 10)
-}
 
 metadata {
 	// Automatically generated. Make future change here.
@@ -54,33 +47,50 @@ metadata {
 		command "dimmerOn"
 		command "dimmerOff"
 	}
+    
+    preferences {
+		input "stepsize", "number", title: "Step Size", description: "Dimmer Step Size", defaultValue: 10, required: false, displayDuringSetup: true
+	}
 
     tiles {
-        // had to overide standard off and on actions to work on Android.
-        // screwed up the currentValue variable in the value tile
+        
         standardTile("switch", "device.switch", width: 2, height: 2, canChangeIcon: true) {
-            state "on", label:'${name}', action:"dimmerOff", icon:"st.switches.switch.on", backgroundColor:"#79b821"
-            state "off", label:'${name}', action:"dimmerOn", icon:"st.switches.switch.off", backgroundColor:"#ffffff"
+            state "on", label:'${name}', action:"dimmerOff", icon:"st.switches.light.on", backgroundColor:"#79b821"
+            state "off", label:'${name}', action:"dimmerOn", icon:"st.switches.light.off", backgroundColor:"#ffffff"
 
         }
+        
         controlTile("levelSliderControl", "device.level", "slider", height: 1, width: 2, inactiveLabel: false) {
             state "level", action:"switch level.setLevel", unit:"", backgroundColor:"#ffe71e"
         }
         
-        valueTile("lValue", "device.level", inactiveLabel: true, height:1, width:1, decoration: "flat") {
-            state "levelValue", label:'${currentValue}%', unit:"", backgroundColor: "#53a7c0"
-        }
+        valueTile("level", "device.level", inactiveLabel: false, decoration: "flat") {
+			state "level", label: 'Level ${currentValue}%'
+		}
 
         standardTile("lUp", "device.switch", inactiveLabel: false,decoration: "flat", canChangeIcon: false) {
                         state "up", label:'', action:"levelUp",icon:"st.illuminance.illuminance.bright"
         }
+        
         standardTile("lDown", "device.switch", inactiveLabel: false,decoration: "flat", canChangeIcon: false) {
                         state "down", label:'', action:"levelDown",icon:"st.illuminance.illuminance.light"
         }
 
         main(["switch"])
-        details(["switch","lUp","lDown","levelSliderControl","lValue" ,"Preferences"])
+        details(["switch","lUp","lDown","levelSliderControl","level" ,"Preferences"])
     }
+}
+
+
+def initialize() {
+    
+	if ( !settings.stepsize )
+    	state.stepsize = 10
+    else
+		state.stepsize = settings.stepsize
+    
+    if (!device.currentValue("level"))
+    	setLevel(100)
 }
 
 def parse(String description) {}
@@ -98,7 +108,7 @@ def dimmerOff() { //made our own, since event was filtered by default on Android
 
 def setLevel(val){
     log.info "setLevel $val"
-    log.info "Step Size: ${settings.stepsize}"
+    log.info "Step Size: ${state.stepsize}"
     
     // make sure we don't drive switches past allowed values (command will hang device waiting for it to
     // execute. Never commes back)
@@ -124,14 +134,20 @@ def setLevel(val){
 }
 
 def levelUp(){
-	def thisStep = settings.stepsize as float
+	if ( state.stepsize )
+    	initialize()
+    
+    def thisStep = state.stepsize as float
     int nextLevel = device.currentValue("level") + thisStep
     setLevel(nextLevel)
     log.info "level up $nextLevel"
 }
 
 def levelDown(){
-    def thisStep = settings.stepsize as float
+	if ( state.stepsize )
+    	initialize()
+        
+    def thisStep = state.stepsize as float
     int nextLevel = device.currentValue("level") - thisStep
     setLevel(nextLevel)
     log.info "level down $nextLevel"
