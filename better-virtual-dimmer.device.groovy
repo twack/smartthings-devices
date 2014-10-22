@@ -23,6 +23,9 @@ Use License: Non-Profit Open Software License version 3.0 (NPOSL-3.0)
  *  Change 3:	2014-10-12 (twackford)
  *				Moved preferences section into metadata section
  *
+ *  Change 4:	2014-10-22 (twackford)
+ *				Fixed on/off override so it will work with other apps/devices
+ *
  ******************************************************************************
                 
   Other Info:	Special thanks to Danny Kleinman at ST for helping me get the
@@ -104,6 +107,16 @@ def dimmerOff() { //made our own, since event was filtered by default on Android
     log.info "off"
     sendEvent(name:"switch",value:"off")
     
+}
+
+def on() {
+    log.info "on"
+    sendEvent(name:"switch",value:"on")
+}
+
+def off() {
+    log.info "off"
+    sendEvent(name:"switch",value:"off")
 }
 
 def setLevel(val){
