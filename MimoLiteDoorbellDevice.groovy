@@ -12,10 +12,19 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
- *	Instructions: 	Once you install this device type into smartthings and have the mimolite hooked up to your
- *					doorbell you will need to configure the mimolite. Go to the doorbell and hold the doorbell
- *					button down. At the same time, you will need to tap the "configure" button on this device's
- *					detail screen. After 5 seconds, you can release the doorbell button.
+ *	Instructions: 	                             ****** IMPORTANT ******
+ * 					1. Pair the mimolite to SmartThings before installing the physical device into the chime casing.
+ * 					2. Edit it's device type file to use this file. (I am assuming you know how.)
+ * 					3. With device powered up and paired to SmartThings, go into the device detail screen and tap
+ * 					   "configure". This sets the device to send a "power loss" signal.
+ * 					4. Now you can pysically install the device into the chime.
+ * 
+ * 					If you have already paired the mimolite to smartthings and installed it into the chime casing,
+ * 					but you have not run configure do the following:
+ * 					1. Open the device detail screen on your mobile device.
+ * 					2. Go to the doorbell button location (usually at front door).
+ * 					3. Press and hold down the button while at the same time tap the "configure" tile in SmartThings.
+ * 					4. Wait 5 seconds and release the doorbell button.
  *
  *					Now press and release your doorbell button as you normally would. You should see the device
  *					icon display a darker blue and the text "DING-DONG". This will display this way for 20 seconds.
