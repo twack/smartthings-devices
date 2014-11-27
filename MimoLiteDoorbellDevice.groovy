@@ -12,19 +12,10 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
- *	Instructions: 	                             ****** IMPORTANT ******
- * 					1. Pair the mimolite to SmartThings before installing the physical device into the chime casing.
- * 					2. Edit it's device type file to use this file. (I am assuming you know how.)
- * 					3. With device powered up and paired to SmartThings, go into the device detail screen and tap
- * 					   "configure". This sets the device to send a "power loss" signal.
- * 					4. Now you can pysically install the device into the chime.
- * 
- * 					If you have already paired the mimolite to smartthings and installed it into the chime casing,
- * 					but you have not run configure do the following:
- * 					1. Open the device detail screen on your mobile device.
- * 					2. Go to the doorbell button location (usually at front door).
- * 					3. Press and hold down the button while at the same time tap the "configure" tile in SmartThings.
- * 					4. Wait 5 seconds and release the doorbell button.
+ *	Instructions: 	Once you install this device type into smartthings and have the mimolite hooked up to your
+ *					doorbell you will need to configure the mimolite. Go to the doorbell and hold the doorbell
+ *					button down. At the same time, you will need to tap the "configure" button on this device's
+ *					detail screen. After 5 seconds, you can release the doorbell button.
  *
  *					Now press and release your doorbell button as you normally would. You should see the device
  *					icon display a darker blue and the text "DING-DONG". This will display this way for 20 seconds.
@@ -37,6 +28,7 @@ metadata {
 	definition (name: "MimoLite Doorbell Device", namespace: "wackford", author: "Todd Wackford") {
 		capability "Configuration"
 		capability "Button"
+        capability "Polling"
         capability "Refresh"
 
         command "pushed"
@@ -56,18 +48,22 @@ metadata {
 		standardTile("configure", "device.configure", inactiveLabel: false, decoration: "flat") {
 			state "configure", label:'', action:"configuration.configure", icon:"st.secondary.configure"
 		}
+        standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat") {
+			state "default", action:"refresh.refresh", icon:"st.secondary.refresh"
+		} 
 		main (["button"])
-		details(["button", "configure"])
+		details(["button", "configure", "refresh"])
 	}
 }
 
 def pushed() {
-    //This method allows you to tap the main tile/icon to simulate someone pressing the doorbell.
-	//Uncomment the two lines below to simulate the doorbell being pushed. Handy for testing a connected app.
 
+	//Uncomment the two lines below to simulate the doorbell being pushed. This is handy for connected app testing.
+    
 	//sendEvent( name : "button", value: "pushed", descriptionText: "$device.displayName was pressed", unit : "" )
 	//doorbellTimerEventHandler()
 }
+
 
 def parse(String description) {
 	log.debug "description is: ${description}"
@@ -76,9 +72,10 @@ def parse(String description) {
 	def cmd = zwave.parse(description, [0x20: 1, 0x84: 1, 0x30: 1, 0x70: 1])
     
     if (cmd.CMD == "7105") {				//Mimo sent a power report lost power (doorbell released)
-        doorbellTimerEventHandler()      
-    } else {   
+        //doorbellTimerEventHandler()       // doesn't always fire for some users
+    } else {
     	sendEvent( name : "button", value : "pushed", descriptionText: "$device.displayName was pressed", unit : "" )
+        doorbellTimerEventHandler()
     }
     
 	if (cmd) {
@@ -96,8 +93,18 @@ def doorbellTimerEventHandler() {
 }
 
 def showButtonReleased() {
-	sendEvent( name : "button", value: "false", descriptionText: "$device.displayName was released")
+	sendEvent( name : "button", value: "default", descriptionText: "$device.displayName was released")
+    refresh()
 	log.debug "button is released"
+}
+
+def poll() {
+	log.debug "state of button is: ${device.currentValue("button")}"
+    sendEvent( name : "button", value: "${device.currentValue("button")}")
+}
+
+def refresh() {
+	poll()
 }
 
 def configure() {
