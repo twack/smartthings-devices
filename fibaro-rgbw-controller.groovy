@@ -32,7 +32,6 @@
 	definition (name: "Fibaro RGBW Controller", namespace: "smartthings", author: "Todd Wackford") {
 		capability "Switch Level"
 		capability "Actuator"
-		capability "Indicator"
 		capability "Switch"
 		capability "Polling"
 		capability "Refresh"
@@ -41,6 +40,7 @@
 		capability "Color Control"
         capability "Power Meter"
        
+        command "getDeviceData"
         command "softwhite"
         command "daylight"
         command "warmwhite"
@@ -53,6 +53,11 @@
         command "purple"
         command "yellow"
         command "white"
+        command "fireplace"
+        command "storm"
+        command "deepfade"
+        command "litefade"
+        command "police"
         command "setAdjustedColor"
         command "setWhiteLevel"
         command "test"
@@ -152,6 +157,26 @@
             state "offwhite", label:"White", action:"white", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
             state "onwhite", label:"White", action:"white", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
         }
+        standardTile("fireplace", "device.fireplace", height: 1, inactiveLabel: false, canChangeIcon: false) {
+            state "offfireplace", label:"Fire Place", action:"fireplace", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onfireplace", label:"Fire Place", action:"fireplace", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
+        standardTile("storm", "device.storm", height: 1, inactiveLabel: false, canChangeIcon: false) {
+            state "offstorm", label:"storm", action:"storm", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onstorm", label:"storm", action:"storm", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
+        standardTile("deepfade", "device.deepfade", height: 1, inactiveLabel: false, canChangeIcon: false) {
+            state "offdeepfade", label:"deep fade", action:"deepfade", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "ondeepfade", label:"deep fade", action:"deepfade", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
+        standardTile("litefade", "device.litefade", height: 1, inactiveLabel: false, canChangeIcon: false) {
+            state "offlitefade", label:"lite fade", action:"litefade", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onlitefade", label:"lite fade", action:"litefade", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
+        standardTile("police", "device.police", height: 1, inactiveLabel: false, canChangeIcon: false) {
+            state "offpolice", label:"police", action:"police", icon:"st.illuminance.illuminance.dark", backgroundColor:"#D8D8D8"
+            state "onpolice", label:"police", action:"police", icon:"st.illuminance.illuminance.bright", backgroundColor:"#FFFFFF"
+        }
         controlTile("saturationSliderControl", "device.saturation", "slider", height: 1, width: 2, inactiveLabel: false) {
 			state "saturation", action:"color control.setSaturation"
 		}
@@ -182,17 +207,15 @@
                  "purple",
                  "yellow",
                  "white",
-                 "power",
+                 "fireplace",
+                 "storm",
+                 "deepfade",
+                 "litefade",
+                 "police",
+                 //"power",
                  //"configure",
                  "refresh"])
 	}
-}
-
-def test() {
-	def value = [:]
-    //value = [hue: 0, saturation: 100, level: 5]
-    value = [red: 255, green: 0, blue: 255, level: 60]
-	setColor(value)
 }
 
 def setAdjustedColor(value) {
@@ -330,9 +353,6 @@ def sendRGB(redHex, greenHex, blueHex) {
     cmd
 }
 
-def zwaveEvent(physicalgraph.zwave.commands.configurationv2.ConfigurationReport cmd) {
-	log.debug "${device.displayName} parameter '${cmd.parameterNumber}' with a byte size of '${cmd.size}' is set to '${cmd.configurationValue}'"
-}
 
 def configure() {
 	log.debug "Configuring Device For SmartThings Use"
@@ -345,6 +365,7 @@ def configure() {
 }
 
 def parse(String description) {
+log.debug "description: ${description}"
 	def item1 = [
 		canBeCurrentState: false,
 		linkText: getLinkText(device),
@@ -354,8 +375,10 @@ def parse(String description) {
 		value:  description
 	]
 	def result
-	def cmd = zwave.parse(description, [0x20: 1, 0x26: 1, 0x70: 1, 0x72: 2, 0x60: 3, 0x33: 2, 0x32: 3, 0x31:2, 0x30: 2])
-	if (cmd) {
+	def cmd = zwave.parse(description, [0x20: 1, 0x26: 1, 0x70: 1, 0x72: 2, 0x60: 3, 0x33: 2, 0x32: 3, 0x31:2, 0x30: 2, 0x86: 1, 0x7A: 1])
+	//log.debug "CMD: ${cmd}"
+    //log.debug "item1: ${item1}"
+    if (cmd) {
 		result = createEvent(cmd, item1)
 	}
 	else {
@@ -364,6 +387,44 @@ def parse(String description) {
 	}
 	log.debug "Parse returned ${result?.descriptionText}"
 	result
+}
+
+def getDeviceData() {
+    def cmd = []
+    
+    cmd << response(zwave.manufacturerSpecificV2.manufacturerSpecificGet()) 
+    cmd << response(zwave.versionV1.versionGet())
+	cmd << response(zwave.firmwareUpdateMdV1.firmwareMdGet())
+    
+    delayBetween(cmd, 500)
+}
+
+def createEvent(physicalgraph.zwave.commands.manufacturerspecificv2.ManufacturerSpecificReport cmd, Map item1) {
+    log.debug "manufacturerName: ${cmd.manufacturerName}"
+	log.debug "manufacturerId:   ${cmd.manufacturerId}"
+    log.debug "productId:        ${cmd.productId}"
+    log.debug "productTypeId:    ${cmd.productTypeId}"
+}
+
+def createEvent(physicalgraph.zwave.commands.versionv1.VersionReport cmd, Map item1) {	
+    updateDataValue("applicationVersion", "${cmd.applicationVersion}")
+    log.debug "applicationVersion:      ${cmd.applicationVersion}"
+    log.debug "applicationSubVersion:   ${cmd.applicationSubVersion}"
+    log.debug "zWaveLibraryType:        ${cmd.zWaveLibraryType}"
+    log.debug "zWaveProtocolVersion:    ${cmd.zWaveProtocolVersion}"
+    log.debug "zWaveProtocolSubVersion: ${cmd.zWaveProtocolSubVersion}"
+}
+
+def createEvent(physicalgraph.zwave.commands.firmwareupdatemdv1.FirmwareMdReport cmd, Map item1) { 
+    log.debug "checksum:       ${cmd.checksum}"
+    log.debug "firmwareId:     ${cmd.firmwareId}"
+    log.debug "manufacturerId: ${cmd.manufacturerId}"
+}
+
+def zwaveEvent(physicalgraph.zwave.commands.configurationv2.ConfigurationReport cmd, Map item1) {
+	log.debug "cmd: ${cmd}"
+    log.debug "item1: ${item1}"
+	log.debug "${device.displayName} parameter '${cmd.parameterNumber}' with a byte size of '${cmd.size}' is set to '${cmd.configurationValue}'"
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.colorcontrolv1.CapabilityReport cmd, Map item1) { 
@@ -490,7 +551,63 @@ def poll() {
 }
 
 def refresh() {
-	zwave.switchMultilevelV1.switchMultilevelGet().format()
+	def cmd = []
+	cmd << response(zwave.switchMultilevelV1.switchMultilevelGet().format())
+    delayBetween(cmd, 500)
+}
+
+ /**
+ * This method will allow the user to update device parameters (behavior) from an app.
+ * A "Zwave Tweaker" app will be developed as an interface to do this. Or the user can
+ * write his/her own app to envoke this method. No type or value checking is done to
+ * compare to what device capability or reaction. It is up to user to read OEM
+ * documentation prio to envoking this method.
+ *
+ * <p>THIS IS AN ADVANCED OPERATION. USE AT YOUR OWN RISK! READ OEM DOCUMENTATION!
+ *
+ * @param List[paramNumber:80,value:10,size:1]
+ *
+ *
+ * @return none
+ */
+def updateZwaveParam(params) {
+	if ( params ) {   
+        def pNumber = params.paramNumber
+        def pSize	= params.size
+        def pValue	= [params.value]
+        log.debug "Updating ${device.displayName} parameter number '${pNumber}' with value '${pValue}' with size of '${pSize}'"
+
+		def cmds = []
+        cmds << zwave.configurationV1.configurationSet(configurationValue: pValue, parameterNumber: pNumber, size: pSize).format()
+        
+        cmds << zwave.configurationV1.configurationGet(parameterNumber: pNumber).format()
+        delayBetween(cmds, 1500)        
+    }
+}
+
+def test() {
+	//def value = [:]
+    //value = [hue: 0, saturation: 100, level: 5]
+    //value = [red: 255, green: 0, blue: 255, level: 60]
+	//setColor(value)
+    
+    def cmd = []
+    
+    if ( !state.cnt ) {
+    	state.cnt = 6
+    } else {
+    	state.cnt = state.cnt + 1
+    }
+    
+    if ( state.cnt > 10 )
+    	state.cnt = 6
+    
+    // run programmed light show
+	cmd << zwave.configurationV1.configurationSet(configurationValue: [state.cnt], parameterNumber: 72, size: 1).format()
+    cmd << zwave.configurationV1.configurationGet(parameterNumber: 72).format()  
+    
+    delayBetween(cmd, 500)
+
 }
 
 def colorNameToRgb(color) {
@@ -659,21 +776,27 @@ def doColorButton(colorName) {
 
     toggleTiles(colorName.toLowerCase().replaceAll("\\s",""))
     
-	def c = getColorData(colorName)
-	def newValue = ["hue": c.h, "saturation": c.s, "level": level, "red": c.r, "green": c.g, "blue": c.b, "hex": c.hex, "alpha": c.alpha]  
-    setColor(newValue)
-            
-    def r = hex(c.r * (level/100))
-    def g = hex(c.g * (level/100))
-    def b = hex(c.b * (level/100))
-
-	sendRGB(r, g, b)
+    def params = []
+    if 		( colorName == "Fire Place" ) 	{ updateZwaveParam([paramNumber:72, value:6,  size:1]) }
+	else if ( colorName == "Storm" ) 		{ updateZwaveParam([paramNumber:72, value:7,  size:1]) }
+    else if ( colorName == "Deep Fade" ) 	{ updateZwaveParam([paramNumber:72, value:8,  size:1]) }
+    else if ( colorName == "Light Fade" ) 	{ updateZwaveParam([paramNumber:72, value:9,  size:1]) }
+    else if ( colorName == "Police" ) 		{ updateZwaveParam([paramNumber:72, value:10, size:1]) }
+    else {
+		def c = getColorData(colorName)
+		def newValue = ["hue": c.h, "saturation": c.s, "level": level, "red": c.r, "green": c.g, "blue": c.b, "hex": c.hex, "alpha": c.alpha]  
+    	setColor(newValue)            
+    	def r = hex(c.r * (level/100))
+    	def g = hex(c.g * (level/100))
+    	def b = hex(c.b * (level/100))
+		sendRGB(r, g, b)
+    }
 }
 
 def toggleTiles(color) {
 	state.colorTiles = []
 	if ( !state.colorTiles ) {
-    	state.colorTiles = ["softwhite","daylight","warmwhite","red","green","blue","cyan","magenta","orange","purple","yellow","white"]
+    	state.colorTiles = ["softwhite","daylight","warmwhite","red","green","blue","cyan","magenta","orange","purple","yellow","white","fireplace","storm","deepfade","litefade","police"]
     }
     
     def cmds = []
@@ -708,3 +831,9 @@ def orange() 	{ doColorButton("Orange") }
 def purple()	{ doColorButton("Purple") }
 def yellow() 	{ doColorButton("Yellow") }
 def white() 	{ doColorButton("White") }
+
+def fireplace() { doColorButton("Fire Place") }
+def storm() 	{ doColorButton("Storm") }
+def deepfade() 	{ doColorButton("Deep Fade") }
+def litefade() 	{ doColorButton("Lite Fade") }
+def police() 	{ doColorButton("Police") }
