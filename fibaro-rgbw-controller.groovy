@@ -264,14 +264,15 @@ def setColor(value) {
     }
     
     if (( value.size() == 2) && (value.hex) && (value.level)) { //being called from outside of device (App) with only hex and level
-		def rgbInt = hexToRgb(value.hex)
+
+        def rgbInt = hexToRgb(value.hex)
         value.rh = hex(rgbInt.r * value.level/100)
         value.gh = hex(rgbInt.g * value.level/100)
         value.bh = hex(rgbInt.b * value.level/100)
     }
     
     if (( value.size() == 1) && (value.colorName)) { //being called from outside of device (App) with only color name
-		def colorData = getColorData(value.colorName)
+        def colorData = getColorData(value.colorName)
         value.rh = colorData.rh
         value.gh = colorData.gh
         value.bh = colorData.bh
@@ -333,7 +334,7 @@ def setLevel(level) {
 
 
 def setWhiteLevel(value) {
-	log.debug "setWightLevel: ${value}"
+	log.debug "setWhiteLevel: ${value}"
     def level = Math.min(value as Integer, 99)    
     level = 255 * level/99 as Integer
     def channel = 0
@@ -365,7 +366,7 @@ def configure() {
 }
 
 def parse(String description) {
-log.debug "description: ${description}"
+	//log.debug "description: ${description}"
 	def item1 = [
 		canBeCurrentState: false,
 		linkText: getLinkText(device),
@@ -375,17 +376,18 @@ log.debug "description: ${description}"
 		value:  description
 	]
 	def result
-	def cmd = zwave.parse(description, [0x20: 1, 0x26: 1, 0x70: 1, 0x72: 2, 0x60: 3, 0x33: 2, 0x32: 3, 0x31:2, 0x30: 2, 0x86: 1, 0x7A: 1])
-	//log.debug "CMD: ${cmd}"
-    //log.debug "item1: ${item1}"
+	def cmd = zwave.parse(description, [0x20: 1, 0x26: 1, 0x70: 2, 0x72: 2, 0x60: 3, 0x33: 2, 0x32: 3, 0x31:2, 0x30: 2, 0x86: 1, 0x7A: 1])
+
     if (cmd) {
-		result = createEvent(cmd, item1)
+        if ( cmd.CMD != "7006" ) {
+        	result = createEvent(cmd, item1)
+        }
 	}
 	else {
 		item1.displayed = displayed(description, item1.isStateChange)
 		result = [item1]
 	}
-	log.debug "Parse returned ${result?.descriptionText}"
+	//log.debug "Parse returned ${result?.descriptionText}"
 	result
 }
 
@@ -421,22 +423,20 @@ def createEvent(physicalgraph.zwave.commands.firmwareupdatemdv1.FirmwareMdReport
     log.debug "manufacturerId: ${cmd.manufacturerId}"
 }
 
-def zwaveEvent(physicalgraph.zwave.commands.configurationv2.ConfigurationReport cmd, Map item1) {
-	log.debug "cmd: ${cmd}"
-    log.debug "item1: ${item1}"
-	log.debug "${device.displayName} parameter '${cmd.parameterNumber}' with a byte size of '${cmd.size}' is set to '${cmd.configurationValue}'"
-}
-
 def zwaveEvent(physicalgraph.zwave.commands.colorcontrolv1.CapabilityReport cmd, Map item1) { 
 
-	log.debug "IN THIS REPORT"
+	log.debug "In CapabilityReport"
 }
 
-def zwaveEvent(physicalgraph.zwave.commands.multichannelv3.MultiChannelCmdEncap cmd, Map item1) {
-	def encapsulatedCommand = cmd.encapsulatedCommand([0x30: 2, 0x32: 2, 0x33: 2]) // can specify command class versions here like in zwave.parse
-	log.debug ("Command from endpoint ${cmd.sourceEndPoint}: ${encapsulatedCommand}")
-	if (encapsulatedCommand) {
-		return zwaveEvent(encapsulatedCommand)
+def createEvent(physicalgraph.zwave.commands.multichannelv3.MultiChannelCmdEncap cmd, Map item1) {
+	def encapsulatedCommand = cmd.encapsulatedCommand([0x26: 1, 0x30: 2, 0x32: 2, 0x33: 2]) // can specify command class versions here like in zwave.parse
+	//log.debug ("Command from endpoint ${cmd.sourceEndPoint}: ${encapsulatedCommand}")
+	if ((cmd.sourceEndPoint >= 1) && (cmd.sourceEndPoint <= 5)) { // we don't need color report
+    	//don't do anything
+    } else {
+    	if (encapsulatedCommand) {
+			zwaveEvent(encapsulatedCommand)
+        }
 	}
 }
 
@@ -476,7 +476,7 @@ def createEvent(physicalgraph.zwave.commands.switchmultilevelv1.SwitchMultilevel
      [response(zwave.basicV1.basicGet())]
 }
 
-def createEvent(physicalgraph.zwave.commands.switchmultilevelv1.SwitchMultilevelSet cmd, Map item1) {
+def createEvent(physicalgraph.zwave.commands.switchmultilevelv3.SwitchMultilevelSet cmd, Map item1) {
      def result = doCreateEvent(cmd, item1)
      for (int i = 0; i < result.size(); i++) {
           result[i].type = "physical"
@@ -519,6 +519,10 @@ def doCreateEvent(physicalgraph.zwave.Command cmd, Map item1) {
      result
 }
 
+def zwaveEvent(physicalgraph.zwave.commands.configurationv1.ConfigurationReport cmd, item1) {
+	log.debug "${device.displayName} parameter '${cmd.parameterNumber}' with a byte size of '${cmd.size}' is set to '${cmd.configurationValue}'"
+}
+/*
 def zwaveEvent(physicalgraph.zwave.commands.configurationv1.ConfigurationReport cmd) {
      log.debug "Report: $cmd"
      def value = "when off"
@@ -526,7 +530,7 @@ def zwaveEvent(physicalgraph.zwave.commands.configurationv1.ConfigurationReport 
      if (cmd.configurationValue[0] == 2) {value = "never"}
      [name: "indicatorStatus", value: value, display: false]
 }
-
+*/
 def createEvent(physicalgraph.zwave.Command cmd,  Map map) {
      // Handles any Z-Wave commands we aren't interested in
      log.debug "UNHANDLED COMMAND $cmd"
@@ -776,11 +780,10 @@ def doColorButton(colorName) {
 
     toggleTiles(colorName.toLowerCase().replaceAll("\\s",""))
     
-    def params = []
     if 		( colorName == "Fire Place" ) 	{ updateZwaveParam([paramNumber:72, value:6,  size:1]) }
 	else if ( colorName == "Storm" ) 		{ updateZwaveParam([paramNumber:72, value:7,  size:1]) }
     else if ( colorName == "Deep Fade" ) 	{ updateZwaveParam([paramNumber:72, value:8,  size:1]) }
-    else if ( colorName == "Light Fade" ) 	{ updateZwaveParam([paramNumber:72, value:9,  size:1]) }
+    else if ( colorName == "Lite Fade" ) 	{ updateZwaveParam([paramNumber:72, value:9,  size:1]) }
     else if ( colorName == "Police" ) 		{ updateZwaveParam([paramNumber:72, value:10, size:1]) }
     else {
 		def c = getColorData(colorName)
