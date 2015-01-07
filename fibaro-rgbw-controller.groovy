@@ -767,7 +767,7 @@ def getColorData(colorName) {
      colorData                 
 }
 
-def doColorButton(colorName) {
+def doColor(colorName) {
     log.debug "doColorButton: '${colorName}()'"
 
     if (device.latestValue("switch") == "off") { on() }
@@ -816,24 +816,25 @@ def toggleTiles(color) {
 }
 
 // rows of buttons
-def softwhite() { doColorButton("Soft White") }
-def daylight()  { doColorButton("Daylight") }
-def warmwhite() { doColorButton("Warm White") }
+def softwhite() { doColor("Soft White") }
+def daylight()  { doColor("Daylight") }
+def warmwhite() { doColor("Warm White") }
 
-def red() 		{ doColorButton("Red") }
-def green() 	{ doColorButton("Green") }
-def blue() 		{ doColorButton("Blue") }
+def red() 		{ doColor("Red") }
+def green() 	{ doColor("Green") }
+def blue() 		{ doColor("Blue") }
 
-def cyan() 		{ doColorButton("Cyan") }
-def magenta()	{ doColorButton("Magenta") }
-def orange() 	{ doColorButton("Orange") }
+def cyan() 		{ doColor("Cyan") }
+def magenta()	{ doColor("Magenta") }
+def orange() 	{ doColor("Orange") }
 
-def purple()	{ doColorButton("Purple") }
-def yellow() 	{ doColorButton("Yellow") }
-def white() 	{ doColorButton("White") }
+def purple()	{ doColor("Purple") }
+def yellow() 	{ doColor("Yellow") }
+def white() 	{ doColor("White") }
 
-def fireplace() { doColorButton("Fire Place") }
-def storm() 	{ doColorButton("Storm") }
-def deepfade() 	{ doColorButton("Deep Fade") }
-def litefade() 	{ doColorButton("Lite Fade") }
-def police() 	{ doColorButton("Police") }
+def fireplace() { doColor("Fire Place") }
+def storm() 	{ doColor("Storm") }
+def deepfade() 	{ doColor("Deep Fade") }
+
+def litefade() 	{ doColor("Lite Fade") }
+def police() 	{ doColor("Police") }
