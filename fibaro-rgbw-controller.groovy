@@ -22,9 +22,7 @@
  
  /*
  Todo's
- 	1. Incorporate updateZwaveParameter handler and Fibaro parameter handlers
-	2. Incorporate automated color programs (after the above)
-    3. Incorporate javadoc information and formatting
+    1. Incorporate javadoc information and formatting
  */
  
  metadata {
@@ -61,8 +59,9 @@
         command "setAdjustedColor"
         command "setWhiteLevel"
         command "test"
+        
+        attribute "whiteLevel", "string"
       
-        // 0 0 0x1101 0 0 0 a 0x27 0x72 0x86 0x26 0x60 0x70 0x32 0x31 0x85 0x33
 		fingerprint deviceId: "0x1101", inClusters: "0x27,0x72,0x86,0x26,0x60,0x70,0x32,0x31,0x85,0x33"
 	}
     
