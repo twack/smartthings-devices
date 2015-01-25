@@ -18,6 +18,16 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ ***************************************************************************************
+ *
+ * Change Log:
+ *
+ * 1.	20150125	Todd Wackford
+ *		Incorporated Crc16Encap function to support core code changes. Duncan figured it
+ *		out as usual.
+ *
+ * 2.	20150125	Todd Wackford
+ *		Leaned out parse and moved most device info getting into configuration method.
  */
  
  /**
@@ -46,6 +56,7 @@
         command		"listCurrentParams"
         command		"updateZwaveParam"
         command		"test"
+        command		"configure"
 
 		fingerprint deviceId: "0x2001", inClusters: "0x30,0x84,0x85,0x80,0x8F,0x56,0x72,0x86,0x70,0x8E,0x31,0x9C,0xEF,0x30,0x31,0x9C"
 	}
@@ -117,33 +128,99 @@
         */
 
 		main(["motion", "temperature", "acceleration", "illuminance"])
-		details(["motion", "temperature", "acceleration", "battery", "illuminance"])
+		details(["motion", "temperature", "acceleration", "battery", "illuminance", "configure"])
 	}
+}
+
+ /**
+ * Configures the device to settings needed by SmarthThings at device discovery time.
+ *
+ * @param none
+ *
+ * @return none
+ */
+def configure() {
+	log.debug "Configuring Device For SmartThings Use"
+    def cmds = []
+    
+    // send associate to group 3 to get sensor data reported only to hub
+    cmds << zwave.associationV2.associationSet(groupingIdentifier:3, nodeId:[zwaveHubNodeId]).format()
+
+	// turn on tamper sensor with active/inactive reports (use it as an acceleration sensor) default is 0, or off
+	cmds << zwave.configurationV1.configurationSet(configurationValue: [4], parameterNumber: 24, size: 1).format()
+    cmds << zwave.configurationV1.configurationGet(parameterNumber: 24).format()
+        
+    // temperature change report threshold (0-255 = 0.1 to 25.5C) default is 1.0 Celcius, setting to .5 Celcius
+    cmds << zwave.configurationV1.configurationSet(configurationValue: [5], parameterNumber: 60, size: 1).format()
+    cmds << zwave.configurationV1.configurationGet(parameterNumber: 60).format() 
+    
+    cmds << response(zwave.batteryV1.batteryGet())
+    cmds << response(zwave.versionV1.versionGet().format())
+    cmds << response(zwave.manufacturerSpecificV2.manufacturerSpecificGet().format())
+    cmds << response(zwave.firmwareUpdateMdV2.firmwareMdGet().format())
+
+	delayBetween(cmds, 500)
 }
 
 // Parse incoming device messages to generate events
 def parse(String description)
 {
 	def result = []
-	def cmd = zwave.parse(description, [0x31: 2, 0x30: 1, 0x84: 1, 0x9C: 1, 0x70: 2])
+	def cmd = zwave.parse(description, [0x72: 2, 0x31: 2, 0x30: 1, 0x84: 1, 0x9C: 1, 0x70: 2, 0x80: 1, 0x86: 1, 0x7A: 1, 0x56: 1])
+    
+    if (description == "updated") {
+        result << response(zwave.wakeUpV1.wakeUpIntervalSet(seconds: 7200, nodeid:zwaveHubNodeId))
+		result << response(zwave.manufacturerSpecificV2.manufacturerSpecificGet())            
+	}
+    
 	if (cmd) {
 		if( cmd.CMD == "8407" ) { 
+            result << response(zwave.batteryV1.batteryGet().format())
         	result << new physicalgraph.device.HubAction(zwave.wakeUpV1.wakeUpNoMoreInformation().format()) 
         }
 		result << createEvent(zwaveEvent(cmd))
 	}
     
-    if (description == "updated") {
-    	if (!state.MSR) {
-			result << response(zwave.wakeUpV1.wakeUpIntervalSet(seconds: 7200, nodeid:zwaveHubNodeId))
-			result << response(zwave.manufacturerSpecificV2.manufacturerSpecificGet())
-		} 
-    }
-    
     if ( result[0] != null ) {
 		log.debug "Parse returned ${result}"
 		result
     }
+}
+
+def zwaveEvent(physicalgraph.zwave.commands.crc16encapv1.Crc16Encap cmd)
+{
+	def versions = [0x31: 2, 0x30: 1, 0x84: 1, 0x9C: 1, 0x70: 2]
+	// def encapsulatedCommand = cmd.encapsulatedCommand(versions)
+	def version = versions[cmd.commandClass as Integer]
+	def ccObj = version ? zwave.commandClass(cmd.commandClass, version) : zwave.commandClass(cmd.commandClass)
+	def encapsulatedCommand = ccObj?.command(cmd.command)?.parse(cmd.data)
+	if (!encapsulatedCommand) {
+		log.debug "Could not extract command from $cmd"
+	} else {
+		zwaveEvent(encapsulatedCommand)
+	}
+}
+
+def createEvent(physicalgraph.zwave.commands.manufacturerspecificv2.ManufacturerSpecificReport cmd, Map item1) { 
+	log.debug "manufacturerId:   ${cmd.manufacturerId}"
+    log.debug "manufacturerName: ${cmd.manufacturerName}"
+    log.debug "productId:        ${cmd.productId}"
+    log.debug "productTypeId:    ${cmd.productTypeId}"
+}
+
+def createEvent(physicalgraph.zwave.commands.versionv1.VersionReport cmd, Map item1) {	
+    updateDataValue("applicationVersion", "${cmd.applicationVersion}")
+    log.debug "applicationVersion:      ${cmd.applicationVersion}"
+    log.debug "applicationSubVersion:   ${cmd.applicationSubVersion}"
+    log.debug "zWaveLibraryType:        ${cmd.zWaveLibraryType}"
+    log.debug "zWaveProtocolVersion:    ${cmd.zWaveProtocolVersion}"
+    log.debug "zWaveProtocolSubVersion: ${cmd.zWaveProtocolSubVersion}"
+}
+
+def createEvent(physicalgraph.zwave.commands.firmwareupdatemdv1.FirmwareMdReport cmd, Map item1) { 
+    log.debug "checksum:       ${cmd.checksum}"
+    log.debug "firmwareId:     ${cmd.firmwareId}"
+    log.debug "manufacturerId: ${cmd.manufacturerId}"
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.sensoralarmv1.SensorAlarmReport cmd)
@@ -196,6 +273,7 @@ def zwaveEvent(physicalgraph.zwave.commands.sensormultilevelv2.SensorMultilevelR
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.batteryv1.BatteryReport cmd) {
+log.debug cmd
 	def map = [:]
 	map.name = "battery"
 	map.value = cmd.batteryLevel > 0 ? cmd.batteryLevel.toString() : 1
@@ -244,7 +322,7 @@ def zwaveEvent(physicalgraph.zwave.commands.manufacturerspecificv2.ManufacturerS
 
 	def msr = String.format("%04X-%04X-%04X", cmd.manufacturerId, cmd.productTypeId, cmd.productId)
 	log.debug "msr: $msr"
-	device.updateDataValue(["MSR", msr])
+    updateDataValue("MSR", msr)
     
     if ( msr == "010F-0800-2001" ) { //this is the msr and device type for the fibaro motion sensor
     	configure()
@@ -252,31 +330,6 @@ def zwaveEvent(physicalgraph.zwave.commands.manufacturerspecificv2.ManufacturerS
 
 	result << createEvent(descriptionText: "$device.displayName MSR: $msr", isStateChange: false)
 	result
-}
-
- /**
- * Configures the device to settings needed by SmarthThings at device discovery time.
- *
- * @param none
- *
- * @return none
- */
-def configure() {
-	log.debug "Configuring Device For SmartThings Use"
-    def cmds = []
-    
-    // send associate to group 3 to get sensor data reported only to hub
-    cmds << zwave.associationV2.associationSet(groupingIdentifier:3, nodeId:[zwaveHubNodeId]).format()
-
-	// turn on tamper sensor with active/inactive reports (use it as an acceleration sensor) default is 0, or off
-	cmds << zwave.configurationV1.configurationSet(configurationValue: [4], parameterNumber: 24, size: 1).format()
-    cmds << zwave.configurationV1.configurationGet(parameterNumber: 24).format()
-        
-    // temperature change report threshold (0-255 = 0.1 to 25.5C) default is 1.0 Celcius, setting to .5 Celcius
-    cmds << zwave.configurationV1.configurationSet(configurationValue: [5], parameterNumber: 60, size: 1).format()
-    cmds << zwave.configurationV1.configurationGet(parameterNumber: 60).format()    
-
-	delayBetween(cmds, 500)
 }
 
 //used to add "test" button for simulation of user changes to parameters
